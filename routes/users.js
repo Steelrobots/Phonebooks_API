@@ -1,6 +1,8 @@
 var express = require('express');
 const { User } = require('../models');
 var router = express.Router();
+const fs = require('fs')
+const path = require('path')
 const { Op } = require("sequelize")
 
 
@@ -8,7 +10,6 @@ const { Op } = require("sequelize")
 router.get('/', async function (req, res, next) {
   try {
     const { page = 1, limit = 10, keyword = "", sort = 'ASC' } = req.query
-    console.log("keyword masuk", keyword)
     const { count, rows } = await User.findAndCountAll({
       where: {
         [Op.or]: [
@@ -38,8 +39,8 @@ router.post('/', async function (req, res) {
     if (!name && !phone) throw Error.message = "name and phone can't be empty"
     const phonebook = await User.create({ name, phone })
     res.status(201).json(phonebook)
-  } catch (error) {
-    res.status(500).json(error.message)
+  } catch (Error) {
+    res.status(500).json({ Error })
   }
 })
 
@@ -56,9 +57,61 @@ router.put('/:id', async function (req, res) {
       plain: true
     })
     res.status(201).json(updatepb[1])
-  } catch (error) {
-    res.status(500).json(error.message)
+  } catch (Error) {
+    res.status(500).json({ Error })
   }
+})
+router.put('/:id/avatar', async function (req, res) {
+  const id = req.params.id
+  let avatar
+  let uploadPath
+
+  if (!req.files || Object.keys(req.files).length === 0) {
+    return res.status(400).send('No files were uploaded.');
+  }
+
+  avatar = req.files.avatar
+  let fileName = Date.now() + '_' + avatar.name
+  uploadPath = path.join(__dirname, '..', 'public', 'images', fileName);
+
+  avatar.mv(uploadPath, async function (err) {
+    if (err)
+      return res.status(500).send(err);
+
+    try {
+      const profile = await User.findOne({
+        where: {
+          id
+        }
+      });
+      if (profile.avatar) {
+        const oldFile = path.join(__dirname, '..', 'public', 'images', profile.avatar)
+        try {
+          fs.unlinkSync(oldFile)
+        } catch {
+          const phonebook = await User.update({ avatar: fileName }, {
+            where: {
+              id
+            },
+            returning: true,
+            plain: true
+          })
+          return res.status(201).json(phonebook[1])
+        }
+      }
+      const phonebook = await User.update({ avatar: fileName }, {
+        where: {
+          id
+        },
+        returning: true,
+        plain: true
+      })
+      return res.status(201).json(phonebook[1])
+    } catch (err) {
+      res.status(500).json(err)
+    }
+  })
+
 })
 router.delete('/:id', async function (req, res) {
   try {
@@ -69,7 +122,7 @@ router.delete('/:id', async function (req, res) {
       }
     });
     if (!user) {
-      res.status(500).json({ message: "user not found" })
+      return res.status(500).json({ message: "user not found" })
     }
     await User.destroy({
       where: {
@@ -78,9 +131,9 @@ router.delete('/:id', async function (req, res) {
       returning: true,
       plain: true
     })
-    return res.status(200).json(user)
+    return res.status(201).json(user)
   } catch (error) {
-
+    res.status(500).json(error.message)
   }
 })
 
