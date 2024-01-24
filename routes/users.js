@@ -7,7 +7,7 @@ const { Op } = require("sequelize")
 
 
 /* GET users listing. */
-router.get('/', async function (req, res, next) {
+router.get('/phonebooks', async function (req, res, next) {
   try {
     const { page = 1, limit = 10, keyword = "", sort = 'ASC' } = req.query
     const { count, rows } = await User.findAndCountAll({
@@ -33,7 +33,7 @@ router.get('/', async function (req, res, next) {
   }
 });
 
-router.post('/', async function (req, res) {
+router.post('/phonebooks', async function (req, res) {
   try {
     const { name, phone } = req.body
     if (!name && !phone) throw Error.message = "name and phone can't be empty"
@@ -44,7 +44,7 @@ router.post('/', async function (req, res) {
   }
 })
 
-router.put('/:id', async function (req, res) {
+router.put('/phonebooks/:id', async function (req, res) {
   try {
     const id = req.params.id
     const { name, phone } = req.body
@@ -61,7 +61,7 @@ router.put('/:id', async function (req, res) {
     res.status(500).json({ Error })
   }
 })
-router.put('/:id/avatar', async function (req, res) {
+router.put('/phonebooks/:id/avatar', async function (req, res) {
   const id = req.params.id
   let avatar
   let uploadPath
@@ -113,7 +113,7 @@ router.put('/:id/avatar', async function (req, res) {
   })
 
 })
-router.delete('/:id', async function (req, res) {
+router.delete('/phonebooks/:id', async function (req, res) {
   try {
     const id = req.params.id
     const user = await User.findOne({
