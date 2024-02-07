@@ -9,7 +9,7 @@ const { Op } = require("sequelize")
 /* GET users listing. */
 router.get('/phonebooks', async function (req, res, next) {
   try {
-    const { page = 1, limit = 10, keyword = "", sort = 'ASC' } = req.query
+    const { page = 1, limit = 35, keyword = "", sort = 'ASC' } = req.query
     const { count, rows } = await User.findAndCountAll({
       where: {
         [Op.or]: [
@@ -113,6 +113,7 @@ router.put('/phonebooks/:id/avatar', async function (req, res) {
   })
 
 })
+
 router.delete('/phonebooks/:id', async function (req, res) {
   try {
     const id = req.params.id
